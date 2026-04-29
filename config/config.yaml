@@ -1,35 +1,72 @@
 # Configuration File
 project:
-  name: "Customer Churn Prediction"
-  author: "Harman Singh"
+  name: "telco-customer-churn-prediction"
   version: "1.0"
 
 # Data Paths
-data:
-  raw_path: "data/raw/Customer-Churn.csv"
-  processed_path: "data/processed/churn_cleaned.csv"
+paths:
+  raw_data: data/raw/telco_churn.csv
+  processed_data: data/processed/telco_churn_processed.csv
+  features_data: data/features/telco_churn_features.csv
+  models_dir: models/
+  reports_dir: reports/
 
-# Model Artifacts
-model:
-  path: "models/xgb_churn_full_tuned.pkl"
-  encoder: "models/onehot_encoder.pkl"
-  columns: "models/train_columns.pkl"
-  results_dir: "models/"
+# MLflow Configuration
+mlflow:
+  tracking_uri: "http://localhost:5000"
+  experiment_name: "telco_churn_experiments"
+  model_name: "telco_churn_classifier"
 
 # Training Configuration
-train:
+training:
   test_size: 0.2
   random_state: 42
-  cv_folds: 3
+  cv_folds: 5
 
-# Hyperparameter tuning
-  param_dist:
-    n_estimators: [100, 200, 300]
-    max_depth: [3, 5, 7]
-    learning_rate: [0.01, 0.1, 0.2]
-    subsample: [0.8, 1.0]
-    colsample_bytree: [0.8, 1.0]
+# Models
+models:
+  logistic_regression:
+    C: 1.0
+    max_iter: 1000
+    solver: lbfgs
 
+  random_forest:
+    n_estimators: 100
+    max_depth: 10
+    min_samples_split: 2
+    random_state: 42
+
+  xgboost:
+    n_estimators: 100
+    max_depth: 6
+    learning_rate: 0.1
+    random_state: 42
+  
+features:
+  target_column: "Churn"
+  drop_columns:
+    - "customerID"
+  categorical_columns:
+    - gender
+    - Partner
+    - Dependents
+    - PhoneService
+    - MultipleLines
+    - InternetService
+    - OnlineSecurity
+    - OnlineBackup
+    - DeviceProtection
+    - TechSupport
+    - StreamingTV
+    - StreamingMovies
+    - Contract
+    - PaperlessBilling
+    - PaymentMethod
+  numerical_columns:
+    - tenure
+    - MonthlyCharges
+    - TotalCharges
+    
 # Logging & Output
 logging:
   level: "INFO"
