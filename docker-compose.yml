@@ -1,4 +1,4 @@
-# docker-compose.yml
+# docker-compose.prod.yml
 
 services:
   api:
@@ -8,20 +8,14 @@ services:
     volumes:
       - ./models:/app/models
       - ./logs:/app/logs
-    depends_on:
-      - mlflow
-    environment:
-      - MLFLOW_TRACKING_URI=http://mlflow:5000
 
-  mlflow:
-    image: ghcr.io/mlflow/mlflow:v2.15.0
-    command: >
-      mlflow server
-      --host 0.0.0.0
-      --port 5000
-      --backend-store-uri sqlite:////mlflow/mlflow.db
-      --default-artifact-root /mlflow/artifacts
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
     ports:
-      - "5000:5000"
-    volumes:
-      - ./mlflow:/mlflow
+      - "8501:8501"
+    depends_on:
+      - api
+    environment:
+      - API_URL=http://api:8000/predict
