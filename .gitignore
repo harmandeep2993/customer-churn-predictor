@@ -36,6 +36,7 @@ logs/
 
 # folders
 extras
+data
 
 # Mlflow 
 mlflow.db
