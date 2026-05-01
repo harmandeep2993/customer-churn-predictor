@@ -2,7 +2,9 @@
 
 import pandas as pd
 import mlflow
+import joblib
 import mlflow.sklearn
+from pathlib import Path
 from mlflow.tracking import MlflowClient
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -70,6 +72,16 @@ def compute_metrics(model, X_test, y_test) -> dict:
     }
 
 
+def save_best_model(model, model_name: str) -> None:
+    """Save best model to models/ directory."""
+    models_dir = Path(config.paths.models_dir)
+    models_dir.mkdir(parents=True, exist_ok=True)
+
+    path = models_dir / "best_model.pkl"
+    joblib.dump(model, path)
+    logger.info(f"Best model '{model_name}' saved to {path}")
+
+
 def train_pipeline(df: pd.DataFrame) -> None:
     """Train all models, log to MLflow, register best model."""
     setup_mlflow()
@@ -79,25 +91,20 @@ def train_pipeline(df: pd.DataFrame) -> None:
 
     best_run_id = None
     best_auc = 0.0
+    best_model = None
+    best_model_name = None
 
     for model_name, model in models.items():
         with mlflow.start_run(run_name=model_name):
             logger.info(f"Training {model_name}...")
 
-            # log hyperparams
             mlflow.log_params(config.raw["models"][model_name])
-
-            # train
             model.fit(X_train, y_train)
 
-            # evaluate
             metrics = compute_metrics(model, X_test, y_test)
             mlflow.log_metrics(metrics)
 
-            # Evaluate Model
             evaluate_pipeline(model, X_test, y_test, model_name)
-
-            # log model
             mlflow.sklearn.log_model(model, artifact_path="model")
 
             run_id = mlflow.active_run().info.run_id
@@ -106,6 +113,16 @@ def train_pipeline(df: pd.DataFrame) -> None:
             if metrics["roc_auc"] > best_auc:
                 best_auc = metrics["roc_auc"]
                 best_run_id = run_id
+                best_model = model
+                best_model_name = model_name
+
+    # save best model locally
+    save_best_model(best_model, best_model_name)
+
+    # register best model to MLflow
+    model_uri = f"runs:/{best_run_id}/model"
+    mlflow.register_model(model_uri=model_uri, name=config.mlflow.model_name)
+    logger.info(f"Best model '{best_model_name}' registered — ROC-AUC: {best_auc:.4f}")
 
     # register best model
     model_uri = f"runs:/{best_run_id}/model"
