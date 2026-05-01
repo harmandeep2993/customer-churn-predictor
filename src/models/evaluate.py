@@ -68,7 +68,7 @@ def print_classification_report(model, X_test, y_test, model_name: str) -> None:
     logger.info(f"\nClassification Report — {model_name}:\n{report}")
 
 
-def evaluate_and_log(model, X_test, y_test, model_name: str) -> None:
+def evaluate_pipeline(model, X_test, y_test, model_name: str) -> None:
     """Run full evaluation and log artifacts to active MLflow run."""
     print_classification_report(model, X_test, y_test, model_name)
 

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import pandas as pd
-from src.components.model_predictor import ModelPredictor
+from extras.components.model_predictor import ModelPredictor
 
 app = FastAPI(title="Customer Churn Prediction API", version="1.0")
 

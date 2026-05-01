@@ -6,7 +6,7 @@ import streamlit as st
 # Add project root to path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from src.components.model_predictor import ModelPredictor
+from extras.components.model_predictor import ModelPredictor
 
 # Initialize predictor and load model
 predictor = ModelPredictor()

@@ -3,23 +3,26 @@
 env/
 __pycache__/
 *.pyc
+uv.lock
 
 # Jupyter
 .ipynb_checkpoints/
+notebooks
 
 # Data
-# data
-# data/raw/
-# data/cleaned/
-# ata/interim/
-# data/processed/
-# *.csv
-# *.xlsx
+data/
+data/raw/
+data/cleaned/
+data/processed/
+!src/data
 
-# Models
-# models/
-# *.pkl
-# *.joblib
+
+Artifacts/
+
+models
+models/
+*.pkl
+*.joblib
 
 # Logs and cache
 logs/
@@ -30,3 +33,9 @@ logs/
 .DS_Store
 .vscode/
 .idea/
+
+# folders
+extras
+
+# Mlflow 
+mlflow.db
