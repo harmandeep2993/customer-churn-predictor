@@ -2,7 +2,7 @@ from pathlib import Path
 import yaml
 from dataclasses import dataclass
 
-CONFIG_PATH = Path(__file__).resolve().parents[2] / "config"/ "config.yaml"
+CONFIG_PATH = Path(__file__).resolve().parents[2] / "config.yaml"
 
 
 @dataclass
