@@ -3,6 +3,7 @@
 import pandas as pd
 import mlflow
 import mlflow.sklearn
+from mlflow.tracking import MlflowClient
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
@@ -10,18 +11,33 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score, f1_score, precision_score, recall_score
 
 from src.utils import config, get_logger
-from src.models import evaluate_and_log
+from src.models.evaluate import evaluate_pipeline
 
 logger = get_logger(__name__)
+
+
+def setup_mlflow() -> None:
+    """Set up MLflow tracking and experiment, restoring if deleted."""
+    mlflow.set_tracking_uri(config.mlflow.tracking_uri)
+    
+    client = MlflowClient()
+    experiment = client.get_experiment_by_name(config.mlflow.experiment_name)
+
+    if experiment is not None and experiment.lifecycle_stage == "deleted":
+        client.restore_experiment(experiment.experiment_id)
+        logger.info(f"Restored deleted experiment '{config.mlflow.experiment_name}'.")
+
+    mlflow.set_experiment(config.mlflow.experiment_name)
+    logger.info(f"MLflow experiment set to '{config.mlflow.experiment_name}'.")
 
 
 def get_models() -> dict:
     """Return model instances with hyperparams from config."""
     raw = config.raw["models"]
     return {
-        "logistic_regression": LogisticRegression(**raw["logistic_regression"]),
-        "random_forest": RandomForestClassifier(**raw["random_forest"]),
-        "xgboost": XGBClassifier(**raw["xgboost"], eval_metric="logloss"),
+        "logistic_regression": LogisticRegression(**raw["logistic_regression"], class_weight= "balanced"),
+        "random_forest": RandomForestClassifier(**raw["random_forest"], class_weight="balanced"),
+        "xgboost": XGBClassifier(**raw["xgboost"], eval_metric="logloss", scale_pos_weight=3),
     }
 
 
@@ -54,10 +70,9 @@ def compute_metrics(model, X_test, y_test) -> dict:
     }
 
 
-def train_and_log(df: pd.DataFrame) -> None:
+def train_pipeline(df: pd.DataFrame) -> None:
     """Train all models, log to MLflow, register best model."""
-    mlflow.set_tracking_uri(config.mlflow.tracking_uri)
-    mlflow.set_experiment(config.mlflow.experiment_name)
+    setup_mlflow()
 
     X_train, X_test, y_train, y_test = split_data(df)
     models = get_models()
@@ -80,7 +95,7 @@ def train_and_log(df: pd.DataFrame) -> None:
             mlflow.log_metrics(metrics)
 
             # Evaluate Model
-            evaluate_and_log(model, X_test, y_test, model_name)
+            evaluate_pipeline(model, X_test, y_test, model_name)
 
             # log model
             mlflow.sklearn.log_model(model, artifact_path="model")
