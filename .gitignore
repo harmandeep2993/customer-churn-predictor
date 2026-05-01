@@ -23,6 +23,7 @@ models
 models/
 *.pkl
 *.joblib
+!src/models
 
 # Logs and cache
 logs/
